@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Wix+Madefor+Display:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 150 30% 5%;
+    --foreground: 210 20% 90%;
+
+    --card: 160 25% 8%;
+    --card-foreground: 210 20% 90%;
+
+    --popover: 160 30% 6%;
+    --popover-foreground: 210 20% 90%;
+
+    --primary: 160 62% 48%;
+    --primary-foreground: 160 60% 8%;
+
+    --secondary: 215 30% 18%;
+    --secondary-foreground: 215 20% 75%;
+
+    --muted: 215 20% 15%;
+    --muted-foreground: 215 15% 55%;
+
+    --accent: 217 85% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 100% / 0.06;
+    --input: 0 0% 100% / 0.08;
+    --ring: 160 62% 48%;
+
+    --radius: 0.75rem;
+
+    /* CereHRX custom tokens */
+    --cere-surface: 220 30% 5%;
+    --cere-surface-raised: 220 30% 7%;
+    --cere-emerald: 160 62% 48%;
+    --cere-emerald-glow: 160 70% 40%;
+    --cere-blue: 217 85% 55%;
+    --cere-amber: 43 100% 50%;
+    --cere-purple: 270 60% 65%;
+    --cere-pink: 320 70% 55%;
+    --cere-teal: 160 100% 45%;
+    --cere-text-primary: 210 30% 95%;
+    --cere-text-secondary: 215 20% 70%;
+    --cere-text-muted: 215 15% 55%;
+
+    --cere-gradient-main: linear-gradient(135deg, hsl(163 40% 17%) 0%, hsl(160 30% 5%) 50%, hsl(163 40% 17%) 100%);
+    --cere-gradient-card: linear-gradient(180deg, hsl(220 40% 4%) 0%, hsl(220 45% 3%) 100%);
+    --cere-gradient-navbar: hsl(160 30% 10% / 0.6);
+
+    --sidebar-background: 160 25% 8%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 160 62% 48%;
+    --sidebar-primary-foreground: 160 60% 8%;
+    --sidebar-accent: 215 30% 18%;
+    --sidebar-accent-foreground: 210 20% 90%;
+    --sidebar-border: 0 0% 100% / 0.06;
+    --sidebar-ring: 160 62% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Poppins", sans-serif;
+    background: url("/images/cerehrx_bg.png") no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+
+    color: #99A1AF;
+    overflow-x: hidden;
+    font-size: 14px;
+    padding: 136px 30px;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Wix Madefor Display', sans-serif;
+  }
+
+  
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--cere-surface));
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground));
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--cere-emerald));
+  }
+}
