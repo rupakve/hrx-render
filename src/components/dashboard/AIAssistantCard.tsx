@@ -1,3 +1,4 @@
+//components/dashboard/AIAssistantCard.tsx
 import { useState, useRef, useEffect } from "react";
 import { Sparkles, ArrowRight, User } from "lucide-react";
 import { fetchChatResponse } from "@/services/chatService";
