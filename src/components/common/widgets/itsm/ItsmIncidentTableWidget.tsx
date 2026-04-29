@@ -1,3 +1,4 @@
+//components/common/widgets/itsm/itsmIncidentTableWidget
 import type { TableWidget } from "@/types/chat";
 import { SourceBadge } from "../shared";
 
@@ -175,7 +176,7 @@ const ItsmTableWidget = ({ data }: { data: TableWidget }) => (
       return (
         <div
           key={i}
-          className="rounded-xl border border-border border-l-4 border-l-widget-itsm bg-card shadow-widget animate-slide-up overflow-hidden"
+          className="rounded-xl border border-border bg-card shadow-widget animate-slide-up overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-border bg-white/[0.02]">

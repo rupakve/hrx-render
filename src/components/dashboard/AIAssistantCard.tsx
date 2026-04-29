@@ -81,8 +81,28 @@ const AIAssistantCard = () => {
         },
       ]);
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Something went wrong";
+      let errorMessage = "Something went wrong. Please try again.";
+
+      if (err instanceof Error) {
+        if (err.message.includes("502") || err.message.includes("503")) {
+          errorMessage =
+            "The server is currently experiencing issues. Please try again in a moment.";
+        } else if (err.message.includes("401") || err.message.includes("403")) {
+          errorMessage = "Your session has expired. Please log in again.";
+        } else if (err.message.includes("404")) {
+          errorMessage = "The requested service could not be found.";
+        } else if (err.message.includes("500")) {
+          errorMessage =
+            "An internal server error occurred. Please try again later.";
+        } else if (
+          err.message.includes("Failed to fetch") ||
+          err.message.includes("NetworkError")
+        ) {
+          errorMessage =
+            "Unable to connect. Please check your internet connection.";
+        }
+      }
+
       setMessages((prev) => [
         ...prev,
         {

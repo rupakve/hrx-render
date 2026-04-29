@@ -1,7 +1,8 @@
+//components/common/widgets/cerework/CereworkTableWidget.tsx
 import type { TableWidget } from "@/types/chat";
 import { SourceBadge } from "../shared";
 
-const HIDDEN_COLUMNS = new Set(["id", "reason_reject"]);
+const HIDDEN_COLUMNS = new Set(["reason_reject"]); //new Set(["id", "reason_reject"]);
 
 const statusMap: Record<string, { label: string; color: string }> = {
   Pending: {
@@ -19,6 +20,14 @@ const statusMap: Record<string, { label: string; color: string }> = {
 };
 
 const renderCell = (col: string, value: string | number | null) => {
+  if (col === "id") {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-widget-cerework/15 border border-widget-cerework/30 text-widget-cerework text-xs font-semibold">
+        #{String(value)}
+      </span>
+    );
+  }
+
   if (value === null || value === undefined || value === "")
     return <span className="text-white/20">—</span>;
 
@@ -36,9 +45,40 @@ const renderCell = (col: string, value: string | number | null) => {
     );
   }
 
-  if (col === "leave_type") {
+  /* if (col === "leave_type") {
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-widget-cerework/15 border border-widget-cerework/30 text-widget-cerework text-xs font-semibold">
+        {String(value)}
+      </span>
+    );
+  } */
+
+  // find
+  /* if (col === "leave_type") {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-widget-cerework/15 border border-widget-cerework/30 text-widget-cerework text-xs font-semibold">
+        {String(value)}
+      </span>
+    );
+  } */
+
+  // replace
+  if (col === "leave_type") {
+    const leaveTypeMap: Record<string, string> = {
+      "Casual Leave": "bg-blue-500/15 text-blue-400 border-blue-500/30",
+      "Sick Leave": "bg-red-500/15 text-red-400 border-red-500/30",
+      "Annual Leave": "bg-purple-500/15 text-purple-400 border-purple-500/30",
+      "Earned Leave": "bg-amber-500/15 text-amber-400 border-amber-500/30",
+      "Maternity Leave": "bg-pink-500/15 text-pink-400 border-pink-500/30",
+      "Paternity Leave": "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",
+    };
+    const color =
+      leaveTypeMap[String(value)] ??
+      "bg-widget-cerework/15 text-widget-cerework border-widget-cerework/30";
+    return (
+      <span
+        className={`inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-semibold ${color}`}
+      >
         {String(value)}
       </span>
     );
@@ -51,13 +91,13 @@ const formatHeader = (col: string) =>
   col.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
 const CereworkTableWidget = ({ data }: { data: TableWidget }) => (
-  <div className="flex flex-col gap-4 w-full max-w-2xl">
+  <div className="flex flex-col gap-4 w-full max-w-4xl">
     {data.tables.map((table, i) => {
       const visibleCols = table.columns.filter((c) => !HIDDEN_COLUMNS.has(c));
       return (
         <div
           key={i}
-          className="rounded-xl border border-border border-l-4 border-l-widget-cerework bg-card shadow-widget animate-slide-up overflow-hidden"
+          className="rounded-xl border border-border bg-card shadow-widget animate-slide-up overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-border bg-white/[0.02]">
@@ -79,7 +119,7 @@ const CereworkTableWidget = ({ data }: { data: TableWidget }) => (
                   {visibleCols.map((col) => (
                     <th
                       key={col}
-                      className="text-left text-[10px] uppercase tracking-widest text-white/30 font-semibold px-5 py-3 whitespace-nowrap"
+                      className="text-left text-[10px] uppercase tracking-widest text-white/30 font-semibold px-3 py-2 whitespace-nowrap"
                     >
                       {formatHeader(col)}
                     </th>
@@ -95,7 +135,10 @@ const CereworkTableWidget = ({ data }: { data: TableWidget }) => (
                     }`}
                   >
                     {visibleCols.map((col) => (
-                      <td key={col} className="px-5 py-3 whitespace-nowrap">
+                      <td
+                        key={col}
+                        className={`px-3 whitespace-nowrap ${rowIdx === table.rows.length - 1 ? "pt-2 pb-4" : "py-2"}`}
+                      >
                         {renderCell(col, row[col])}
                       </td>
                     ))}

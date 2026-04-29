@@ -1,4 +1,4 @@
-//index.tsx
+//src/pages/index.tsx
 import { useEffect, useState } from "react";
 //import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/dashboard/Navbar";
@@ -133,22 +133,14 @@ const Index = () => {
 
           <section className="p-4 md:p-6">
             <FilterBar />
-            <AIAssistantCard onResponse={setAiResponse} />
-
+            {/* <AIAssistantCard onResponse={setAiResponse} /> */}
+            <AIAssistantCard />
             <div className="flex flex-col lg:flex-row gap-6 mt-2">
               {/* Main content */}
               <div className="flex-1 min-w-0">
                 <div className="transition-all duration-300 ease-in-out">
-                  {aiResponse ? (
-                    <AIResponsePanel
-                      response={aiResponse}
-                      onClear={() => setAiResponse(null)}
-                    />
-                  ) : (
-                    <>
-                      <NextSteps />
-                    </>
-                  )}
+                  <NextSteps />
+
                   <PopularTopics />
                   <RecommendedForYou />
                 </div>
