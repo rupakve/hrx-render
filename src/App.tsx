@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound.tsx";
 import Login from "./pages/Login";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import Landing from "./pages/Landing.tsx";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +29,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<Landing />} />
             {/* <Route path="/login" element={<Login />} /> */}
             <Route
               path="/dashboard"

@@ -200,9 +200,27 @@ const AIAssistantCard = () => {
                       }`}
                     >
                       {/* Message text */}
-                      {msg.text.split("\n").map((line, i, arr) => (
+                      {/* {msg.text.split("\n").map((line, i, arr) => (
                         <span key={i}>
                           {line}
+                          {i < arr.length - 1 && <br />}
+                        </span>
+                      ))} */}
+
+                      {msg.text.split("\n").map((line, i, arr) => (
+                        <span key={i}>
+                          {line.split(/\*\*(.*?)\*\*/g).map((part, j) =>
+                            j % 2 === 1 ? (
+                              <strong
+                                key={j}
+                                className="font-semibold text-white"
+                              >
+                                {part}
+                              </strong>
+                            ) : (
+                              <span key={j}>{part}</span>
+                            ),
+                          )}
                           {i < arr.length - 1 && <br />}
                         </span>
                       ))}
@@ -215,7 +233,44 @@ const AIAssistantCard = () => {
                           <div key={i} className="w-full">
                             <WidgetCard
                               data={widget}
-                              onSelect={(value) => handleGenerate(value)}
+                              onSelect={(value, label) => {
+                                // show label as user message in chat
+                                const userMsg: Message = {
+                                  id: Date.now().toString(),
+                                  role: "user",
+                                  text: label, // ← "Awaiting Hardware" shown in chat
+                                };
+                                setMessages((prev) => [...prev, userMsg]);
+
+                                // send value to API
+                                setLoading(true);
+                                fetchChatResponse(value) // ← "6" sent to Flask
+                                  .then((apiRes) => {
+                                    const formatted =
+                                      mapApiToChatResponse(apiRes);
+                                    setMessages((prev) => [
+                                      ...prev,
+                                      {
+                                        id: (Date.now() + 1).toString(),
+                                        role: "assistant",
+                                        text: formatted.message,
+                                        module: apiRes.module,
+                                        widgets: formatted.widgets,
+                                      },
+                                    ]);
+                                  })
+                                  .catch(() => {
+                                    setMessages((prev) => [
+                                      ...prev,
+                                      {
+                                        id: (Date.now() + 1).toString(),
+                                        role: "assistant",
+                                        text: "Something went wrong. Please try again.",
+                                      },
+                                    ]);
+                                  })
+                                  .finally(() => setLoading(false));
+                              }}
                             />
                           </div>
                         ))}
