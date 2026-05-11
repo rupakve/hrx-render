@@ -12,6 +12,7 @@ import { ChatResponse, WidgetData } from "@/types/chat";
 import AIResponsePanel from "@/components/dashboard/AIResponsePanel";
 //import { useAuth } from "@/context/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChatProvider } from "@/context/ChatContext";
 
 const Index = () => {
   const [userEmail, setUserEmail] = useState("");
@@ -129,29 +130,31 @@ const Index = () => {
         <div className="absolute inset-[3px] bg-gradient-to-br from-[hsl(163_40%_17%)] via-[hsl(160_30%_5%)] to-[hsl(163_40%_17%)] rounded-[23px]" />
 
         <div className="relative z-10 rounded-[25px]">
-          <Navbar />
+          <ChatProvider>
+            <Navbar />
 
-          <section className="p-4 md:p-6">
-            <FilterBar />
-            {/* <AIAssistantCard onResponse={setAiResponse} /> */}
-            <AIAssistantCard />
-            <div className="flex flex-col lg:flex-row gap-6 mt-2">
-              {/* Main content */}
-              <div className="flex-1 min-w-0">
-                <div className="transition-all duration-300 ease-in-out">
-                  <NextSteps />
+            <section className="p-4 md:p-6">
+              <FilterBar />
+              {/* <AIAssistantCard onResponse={setAiResponse} /> */}
+              <AIAssistantCard />
+              <div className="flex flex-col lg:flex-row gap-6 mt-2">
+                {/* Main content */}
+                <div className="flex-1 min-w-0">
+                  <div className="transition-all duration-300 ease-in-out">
+                    <NextSteps />
 
-                  <PopularTopics />
-                  <RecommendedForYou />
+                    <PopularTopics />
+                    <RecommendedForYou />
+                  </div>
+                </div>
+
+                {/* Right sidebar */}
+                <div className="w-full lg:w-[320px] xl:w-[340px] shrink-0">
+                  <SidePanel />
                 </div>
               </div>
-
-              {/* Right sidebar */}
-              <div className="w-full lg:w-[320px] xl:w-[340px] shrink-0">
-                <SidePanel />
-              </div>
-            </div>
-          </section>
+            </section>
+          </ChatProvider>
         </div>
       </main>
     </div>

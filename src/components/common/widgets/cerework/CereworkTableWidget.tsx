@@ -1,8 +1,11 @@
-//components/common/widgets/cerework/CereworkTableWidget.tsx
+// components/common/widgets/cerework/CereworkTableWidget.tsx
+import { useState } from "react";
 import type { TableWidget } from "@/types/chat";
 import { SourceBadge } from "../shared";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
-const HIDDEN_COLUMNS = new Set(["reason_reject"]); //new Set(["id", "reason_reject"]);
+const DEFAULT_ROWS = 5;
+const HIDDEN_COLUMNS = new Set(["reason_reject"]);
 
 const statusMap: Record<string, { label: string; color: string }> = {
   Pending: {
@@ -45,24 +48,6 @@ const renderCell = (col: string, value: string | number | null) => {
     );
   }
 
-  /* if (col === "leave_type") {
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-widget-cerework/15 border border-widget-cerework/30 text-widget-cerework text-xs font-semibold">
-        {String(value)}
-      </span>
-    );
-  } */
-
-  // find
-  /* if (col === "leave_type") {
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-widget-cerework/15 border border-widget-cerework/30 text-widget-cerework text-xs font-semibold">
-        {String(value)}
-      </span>
-    );
-  } */
-
-  // replace
   if (col === "leave_type") {
     const leaveTypeMap: Record<string, string> = {
       "Casual Leave": "bg-blue-500/15 text-blue-400 border-blue-500/30",
@@ -90,72 +75,122 @@ const renderCell = (col: string, value: string | number | null) => {
 const formatHeader = (col: string) =>
   col.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-const CereworkTableWidget = ({ data }: { data: TableWidget }) => (
-  <div className="flex flex-col gap-4 w-full max-w-4xl">
-    {data.tables.map((table, i) => {
-      const visibleCols = table.columns.filter((c) => !HIDDEN_COLUMNS.has(c));
-      return (
-        <div
-          key={i}
-          className="rounded-xl border border-border bg-card shadow-widget animate-slide-up overflow-hidden"
-        >
-          {/* Header */}
-          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-border bg-white/[0.02]">
-            <SourceBadge source="cerework" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-white/50">
-              {table.table_name.replace(/_/g, " ")}
-            </span>
-            <span className="ml-auto text-[10px] text-white/20">
-              {table.rows.length}{" "}
-              {table.rows.length === 1 ? "record" : "records"}
-            </span>
-          </div>
+// ── Single table with expand/collapse ────────────────────────────────────────
+const TableBlock = ({
+  table,
+  index,
+}: {
+  table: TableWidget["tables"][0];
+  index: number;
+}) => {
+  const [expanded, setExpanded] = useState(false);
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-border">
-                  {visibleCols.map((col) => (
-                    <th
-                      key={col}
-                      className="text-left text-[10px] uppercase tracking-widest text-white/30 font-semibold px-3 py-2 whitespace-nowrap"
-                    >
-                      {formatHeader(col)}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {table.rows.map((row, rowIdx) => (
-                  <tr
-                    key={rowIdx}
-                    className={`border-b border-border/40 last:border-0 transition-colors hover:bg-white/[0.03] ${
-                      rowIdx % 2 === 0 ? "bg-transparent" : "bg-white/[0.015]"
+  const visibleCols = table.columns.filter((c) => !HIDDEN_COLUMNS.has(c));
+  const hasMore = table.rows.length > DEFAULT_ROWS;
+  const displayedRows = expanded
+    ? table.rows
+    : table.rows.slice(0, DEFAULT_ROWS);
+  const remainingCount = table.rows.length - DEFAULT_ROWS;
+
+  return (
+    <div
+      key={index}
+      className="rounded-xl border border-border bg-card shadow-widget animate-slide-up overflow-hidden"
+    >
+      {/* Header */}
+      <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-border bg-white/[0.02]">
+        <SourceBadge source="cerework" />
+        <span className="text-xs font-semibold uppercase tracking-widest text-white/50">
+          {table.table_name.replace(/_/g, " ")}
+        </span>
+        <span className="ml-auto text-[10px] text-white/20">
+          {table.rows.length} {table.rows.length === 1 ? "record" : "records"}
+        </span>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-border">
+              {visibleCols.map((col) => (
+                <th
+                  key={col}
+                  className="text-left text-[10px] uppercase tracking-widest text-white/30 font-semibold px-3 py-2 whitespace-nowrap"
+                >
+                  {formatHeader(col)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {displayedRows.map((row, rowIdx) => (
+              <tr
+                key={rowIdx}
+                className={`border-b border-border/40 last:border-0 transition-colors hover:bg-white/[0.03] ${
+                  rowIdx % 2 === 0 ? "bg-transparent" : "bg-white/[0.015]"
+                }`}
+              >
+                {visibleCols.map((col) => (
+                  <td
+                    key={col}
+                    className={`px-3 whitespace-nowrap ${
+                      rowIdx === displayedRows.length - 1 && !hasMore
+                        ? "pt-2 pb-4"
+                        : "py-2"
                     }`}
                   >
-                    {visibleCols.map((col) => (
-                      <td
-                        key={col}
-                        className={`px-3 whitespace-nowrap ${rowIdx === table.rows.length - 1 ? "pt-2 pb-4" : "py-2"}`}
-                      >
-                        {renderCell(col, row[col])}
-                      </td>
-                    ))}
-                  </tr>
+                    {renderCell(col, row[col])}
+                  </td>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-          {table.rows.length === 0 && (
-            <div className="px-5 py-8 text-center text-xs text-white/25">
-              No records found
-            </div>
-          )}
+      {/* View more / Show less */}
+      {hasMore && (
+        <div
+          className="flex items-center justify-between px-5 py-2.5 border-t border-border/40
+                     bg-white/[0.02] cursor-pointer hover:bg-white/[0.04] transition"
+          onClick={() => setExpanded((prev) => !prev)}
+        >
+          <span className="text-[11px] text-white/30">
+            {expanded
+              ? `Showing all ${table.rows.length} records`
+              : `Showing ${DEFAULT_ROWS} of ${table.rows.length} records`}
+          </span>
+          <span className="flex items-center gap-1 text-[11px] text-accent font-medium">
+            {expanded ? (
+              <>
+                Show less <ChevronUp className="w-3.5 h-3.5" />
+              </>
+            ) : (
+              <>
+                View {remainingCount} more{" "}
+                <ChevronDown className="w-3.5 h-3.5" />
+              </>
+            )}
+          </span>
         </div>
-      );
-    })}
+      )}
+
+      {table.rows.length === 0 && (
+        <div className="px-5 py-8 text-center text-xs text-white/25">
+          No records found
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Main widget ───────────────────────────────────────────────────────────────
+const CereworkTableWidget = ({ data }: { data: TableWidget }) => (
+  <div className="flex flex-col gap-4 w-full max-w-4xl">
+    {data.tables.map((table, i) => (
+      <TableBlock key={i} table={table} index={i} />
+    ))}
   </div>
 );
 

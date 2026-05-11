@@ -1,10 +1,11 @@
-//components/dashboard/AIAssistantCard.tsx
+// components/dashboard/AIAssistantCard.tsx
 import { useState, useRef, useEffect } from "react";
 import { Sparkles, ArrowRight, User } from "lucide-react";
 import { fetchChatResponse } from "@/services/chatService";
 import { mapApiToChatResponse } from "@/mappers/chatMapper";
-import type { ChatResponse, WidgetData } from "@/types/chat";
+import type { WidgetData } from "@/types/chat";
 import WidgetCard from "@/components/common/widgets/WidgetCard";
+import { useChat } from "@/context/ChatContext";
 
 interface Message {
   id: string;
@@ -14,12 +15,7 @@ interface Message {
   widgets?: WidgetData[];
 }
 
-const CHIPS = [
-  //"Show my leave balance",
-  //"Check IT tickets",
-  //"Show me my Goals",
-  //"My pending approvals",
-];
+const CHIPS: string[] = [];
 
 const moduleBadge: Record<string, { label: string; color: string }> = {
   hrx: {
@@ -42,78 +38,74 @@ const moduleBadge: Record<string, { label: string; color: string }> = {
 };
 
 const AIAssistantCard = () => {
+  const {
+    messages,
+    loading,
+    isExpanded,
+    setIsExpanded,
+    sendMessage,
+    setMessages,
+    setLoading,
+  } = useChat();
+
   const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isExpanded, setIsExpanded] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Auto-scroll to bottom on new messages
   useEffect(() => {
     const el = chatContainerRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, [messages, loading]);
 
+  // ── Send message ─────────────────────────────────────────────────────────
   const handleGenerate = async (overrideQuery?: string) => {
     const text = (overrideQuery ?? query).trim();
     if (!text || loading) return;
 
-    if (!isExpanded) setIsExpanded(true);
-
-    const userMsg: Message = { id: Date.now().toString(), role: "user", text };
-    setMessages((prev) => [...prev, userMsg]);
     setQuery("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
+    if (!isExpanded) setIsExpanded(true);
+
+    await sendMessage(text); // ← delegates everything to ChatContext
+  };
+
+  // ── Widget option selected ────────────────────────────────────────────────
+  const handleWidgetSelect = (value: string, label: string) => {
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      text: label, // show label in chat
+    };
+    setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
 
-    try {
-      const apiRes = await fetchChatResponse(text);
-      const formatted: ChatResponse = mapApiToChatResponse(apiRes);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          text: formatted.message,
-          module: apiRes.module,
-          widgets: formatted.widgets,
-        },
-      ]);
-    } catch (err: unknown) {
-      let errorMessage = "Something went wrong. Please try again.";
-
-      if (err instanceof Error) {
-        if (err.message.includes("502") || err.message.includes("503")) {
-          errorMessage =
-            "The server is currently experiencing issues. Please try again in a moment.";
-        } else if (err.message.includes("401") || err.message.includes("403")) {
-          errorMessage = "Your session has expired. Please log in again.";
-        } else if (err.message.includes("404")) {
-          errorMessage = "The requested service could not be found.";
-        } else if (err.message.includes("500")) {
-          errorMessage =
-            "An internal server error occurred. Please try again later.";
-        } else if (
-          err.message.includes("Failed to fetch") ||
-          err.message.includes("NetworkError")
-        ) {
-          errorMessage =
-            "Unable to connect. Please check your internet connection.";
-        }
-      }
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          text: errorMessage,
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+    fetchChatResponse(value) // send value to API
+      .then((apiRes) => {
+        const formatted = mapApiToChatResponse(apiRes);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            text: formatted.message,
+            module: apiRes.module,
+            widgets: formatted.widgets,
+          },
+        ]);
+      })
+      .catch(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            text: "Something went wrong. Please try again.",
+          },
+        ]);
+      })
+      .finally(() => setLoading(false));
   };
 
   const showChips = messages.length === 0 && !isExpanded;
@@ -172,8 +164,8 @@ const AIAssistantCard = () => {
                       isUser
                         ? "items-end max-w-[80%]"
                         : msg.widgets && msg.widgets.length > 0
-                          ? "items-start w-full" // ← full width when widgets present
-                          : "items-start max-w-[80%]" // ← normal width for text only
+                          ? "items-start w-full"
+                          : "items-start max-w-[80%]"
                     }`}
                   >
                     {isFirstInGroup && (
@@ -182,7 +174,7 @@ const AIAssistantCard = () => {
                       </span>
                     )}
 
-                    {/* Module badge — only on assistant messages */}
+                    {/* Module badge */}
                     {!isUser && msg.module && moduleBadge[msg.module] && (
                       <span
                         className={`inline-flex items-center text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full mb-2 ${moduleBadge[msg.module].color}`}
@@ -199,14 +191,6 @@ const AIAssistantCard = () => {
                           : "bg-white/[0.05] border border-white/[0.07] text-white/80 rounded-2xl rounded-tl-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                       }`}
                     >
-                      {/* Message text */}
-                      {/* {msg.text.split("\n").map((line, i, arr) => (
-                        <span key={i}>
-                          {line}
-                          {i < arr.length - 1 && <br />}
-                        </span>
-                      ))} */}
-
                       {msg.text.split("\n").map((line, i, arr) => (
                         <span key={i}>
                           {line.split(/\*\*(.*?)\*\*/g).map((part, j) =>
@@ -226,51 +210,14 @@ const AIAssistantCard = () => {
                       ))}
                     </div>
 
-                    {/* Widgets — scrollable row */}
+                    {/* Widgets */}
                     {!isUser && msg.widgets && msg.widgets.length > 0 && (
                       <div className="w-full mt-1">
                         {msg.widgets.map((widget, i) => (
                           <div key={i} className="w-full">
                             <WidgetCard
                               data={widget}
-                              onSelect={(value, label) => {
-                                // show label as user message in chat
-                                const userMsg: Message = {
-                                  id: Date.now().toString(),
-                                  role: "user",
-                                  text: label, // ← "Awaiting Hardware" shown in chat
-                                };
-                                setMessages((prev) => [...prev, userMsg]);
-
-                                // send value to API
-                                setLoading(true);
-                                fetchChatResponse(value) // ← "6" sent to Flask
-                                  .then((apiRes) => {
-                                    const formatted =
-                                      mapApiToChatResponse(apiRes);
-                                    setMessages((prev) => [
-                                      ...prev,
-                                      {
-                                        id: (Date.now() + 1).toString(),
-                                        role: "assistant",
-                                        text: formatted.message,
-                                        module: apiRes.module,
-                                        widgets: formatted.widgets,
-                                      },
-                                    ]);
-                                  })
-                                  .catch(() => {
-                                    setMessages((prev) => [
-                                      ...prev,
-                                      {
-                                        id: (Date.now() + 1).toString(),
-                                        role: "assistant",
-                                        text: "Something went wrong. Please try again.",
-                                      },
-                                    ]);
-                                  })
-                                  .finally(() => setLoading(false));
-                              }}
+                              onSelect={handleWidgetSelect}
                             />
                           </div>
                         ))}
@@ -364,12 +311,6 @@ const AIAssistantCard = () => {
                   </button>
                 ))}
               </div>
-            )}
-
-            {!query && !isExpanded && (
-              <p className="text-xs text-white/20 mt-1">
-                {/* Try: "Show my leave balance" or "Check IT tickets" */}
-              </p>
             )}
           </div>
         </div>

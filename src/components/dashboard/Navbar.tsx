@@ -1,18 +1,12 @@
+//components/dashboard/Navbar.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Bell,
-  Menu,
-  X,
-  User,
-  Settings,
-  LogOut,
-  ChevronDown,
-} from "lucide-react";
+import { Menu, X, User, Settings, LogOut, ChevronDown } from "lucide-react";
 import logoSvg from "@/assets/logo.svg";
 import { useAuth } from "@/context/AuthContext";
 import { getUser } from "@/lib/authStorage";
 import userProfile from "@/assets/user_profile.png";
+import { NotificationBell } from "@/components/common/NotificationBell";
 
 const navLinks = [
   { label: "My Relations", badge: 2 },
@@ -80,10 +74,7 @@ const Navbar = () => {
         <div className="flex items-center gap-0 ml-auto">
           {/* Bell */}
           <div className="px-6 border-r border-white/10 relative">
-            <button className="relative text-muted-foreground hover:text-foreground transition-colors">
-              <Bell size={20} />
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full ring-2 ring-background" />
-            </button>
+            <NotificationBell />
           </div>
 
           {/* Profile */}
