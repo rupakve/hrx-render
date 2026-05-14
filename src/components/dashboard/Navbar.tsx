@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getUser } from "@/lib/authStorage";
 import userProfile from "@/assets/user_profile.png";
 import { NotificationBell } from "@/components/common/NotificationBell";
+import { Link } from "react-router-dom";
 
 const navLinks = [
   { label: "My Relations", badge: 2 },
@@ -31,9 +32,9 @@ const Navbar = () => {
   return (
     <nav className="flex items-center justify-between px-4 md:px-6 py-4 bg-[hsl(160_30%_10%/0.6)] border-b border-border rounded-t-[25px] relative z-50">
       {/* Logo */}
-      <a href="#" className="flex items-center gap-2 shrink-0">
+      <Link to="/" className="flex items-center gap-2 shrink-0">
         <img src={logoSvg} alt="CereHRX" className="h-8" />
-      </a>
+      </Link>
 
       {/* Mobile toggle */}
       <button

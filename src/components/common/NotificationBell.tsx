@@ -23,11 +23,43 @@ function sourceBadge(source_type: string) {
     hrx: "bg-accent/20 text-accent border border-accent/30",
     crm: "bg-purple-500/20 text-purple-400 border border-purple-500/30",
     leave: "bg-orange-500/20 text-orange-400 border border-orange-500/30",
+    leave_decision: "bg-teal-500/20 text-teal-400 border border-teal-500/30",
+    state_change: "bg-sky-500/20 text-sky-400 border border-sky-500/30",
   };
   return (
     map[source_type] ??
     "bg-white/10 text-muted-foreground border border-white/10"
   );
+}
+
+function parseMessage(text: string) {
+  // handles **bold**, <b>bold</b>, <i>italic</i>
+  const parts = text.split(/(\*\*.*?\*\*|<b>.*?<\/b>|<i>.*?<\/i>)/g);
+
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={i} className="font-semibold text-foreground">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith("<b>") && part.endsWith("</b>")) {
+      return (
+        <strong key={i} className="font-semibold text-foreground">
+          {part.slice(3, -4)}
+        </strong>
+      );
+    }
+    if (part.startsWith("<i>") && part.endsWith("</i>")) {
+      return (
+        <em key={i} className="italic text-foreground/80">
+          {part.slice(3, -4)}
+        </em>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
 }
 
 function NotificationCard({
@@ -54,23 +86,26 @@ function NotificationCard({
           <span
             className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide ${sourceBadge(item.source_type)}`}
           >
-            {item.source_type}
+            {item.source_type_label}
           </span>
           <span className="text-xs text-muted-foreground">
             {timeAgo(item.created_at)}
           </span>
         </div>
-        <button
+        {/* Commented Temporarily */}
+        {/* <button
           onClick={() => onDismiss(item.id)}
           className="text-muted-foreground hover:text-foreground transition flex-shrink-0 mt-0.5"
         >
           <X className="w-3.5 h-3.5" />
-        </button>
+        </button> */}
       </div>
 
       {/* Message */}
+      {/* <p className="text-xs text-foreground/60 mt-2 leading-relaxed font-light">{item.pending_message}</p> */}
+
       <p className="text-xs text-foreground/60 mt-2 leading-relaxed font-light">
-        {item.pending_message}
+        {parseMessage(item.pending_message)}
       </p>
 
       {/* Option buttons */}
@@ -135,6 +170,18 @@ export function NotificationBell() {
     }
   };
 
+  // ── source_type: new_incident_alert → send to chat API ─────────────────────────────────
+  const handleNewIncidentAction = async (
+    _item: NotificationItem,
+    value: string,
+  ) => {
+    if (value === "Yes") {
+      await sendMessage(value);
+    } else {
+      await handleNotificationAction(_item, value);
+    }
+  };
+
   // ── source_type: leave → TODO: wire when leave API is ready ──────────────
   const handleLeaveAction = async (item: NotificationItem, value: string) => {
     //console.log(`Leave action: "${value}" for source_id: ${item.source_id}`);
@@ -155,6 +202,8 @@ export function NotificationBell() {
       await handleUsmsAction(item, value);
     } else if (item.source_type === "leave") {
       await handleLeaveAction(item, value);
+    } else if (item.source_type === "new_incident_alert") {
+      await handleNewIncidentAction(item, value);
     }
     // else if (item.source_type === "cerework") { await handleCereworkAction(item, value) }
     // else if (item.source_type === "crm")      { await handleCrmAction(item, value) }
@@ -260,7 +309,8 @@ export function NotificationBell() {
           </div>
 
           {/* Footer */}
-          {visible.length > 0 && (
+          {/* Commented Temporarily */}
+          {/* {visible.length > 0 && (
             <div
               className="px-4 py-2.5 border-t border-white/10 flex justify-between
                          items-center bg-[hsl(220_40%_3%)]"
@@ -274,7 +324,7 @@ export function NotificationBell() {
                 Dismiss all
               </button>
             </div>
-          )}
+          )} */}
         </div>
       )}
     </div>

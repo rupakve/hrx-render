@@ -32,25 +32,11 @@ const steps: NextStep[] = [
     description:
       "This Opportunity is named xxxxxxx with a minimal Order Value. The Status is open",
   },
-  {
-    badge: "LEAD",
-    variant: "lead",
-    title: "Lead 789012",
-    description:
-      "This Lead is about Mr. Boye Recent call dec 21st, proposed to schedule a next Meeting early Jan 26.",
-  },
-  {
-    badge: "Quote",
-    variant: "quote",
-    title: "Quote 345678",
-    description:
-      "This Quote was most recent worked on Dec 20st. Its value 250K USD",
-  },
 ];
 
 const badgeStyles: Record<BadgeVariant, string> = {
-  lead: "bg-cere-blue/15 text-cere-blue border-cere-blue/30",
-  quote: "bg-cere-amber/15 text-cere-amber border-cere-amber/30",
+  lead: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  quote: "bg-amber-500/15 text-amber-400 border-amber-500/30",
   opportunity: "bg-primary/15 text-primary border-primary/30",
 };
 
