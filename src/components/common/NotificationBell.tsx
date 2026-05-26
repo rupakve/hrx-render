@@ -93,12 +93,12 @@ function NotificationCard({
           </span>
         </div>
         {/* Commented Temporarily */}
-        {/* <button
+        <button
           onClick={() => onDismiss(item.id)}
           className="text-muted-foreground hover:text-foreground transition flex-shrink-0 mt-0.5"
         >
           <X className="w-3.5 h-3.5" />
-        </button> */}
+        </button>
       </div>
 
       {/* Message */}
@@ -157,8 +157,81 @@ export function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleDismiss = (id: string) => {
+  /* const handleDismiss = (id: string) => {
     setDismissed((prev) => new Set(prev).add(id));
+  }; */
+
+  /* Single Notification Seen Section */
+  const handleDismiss = async (id: string) => {
+    const auth = getAuth();
+    if (!auth) return;
+
+    const notification = notifications.find((n) => n.id === id);
+    setDismissed((prev) => new Set(prev).add(id));
+
+    if (!notification) return;
+
+    try {
+      const payload =
+        notification.options.length > 0
+          ? {
+              notification_id: notification.id,
+              user_id: auth.user.user_id,
+              action:
+                notification.options[notification.options.length - 1].value,
+              source_type: notification.source_type,
+              type: "action", // ← added
+            }
+          : {
+              notification_id: notification.id,
+              user_id: auth.user.user_id,
+              source_type: notification.source_type,
+              type: "mark_seen", // ← added
+            };
+
+      await apiClient("/notifications/action", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.error("Dismiss action failed", err);
+    }
+  };
+
+  /* Multiple notification - Dismiss All Section */
+  const handleDismissAll = async () => {
+    const auth = getAuth();
+    if (!auth) return;
+
+    setDismissed(new Set(visible.map((n) => String(n.id))));
+    setOpen(false);
+
+    // now includes ALL notifications, not just ones with options
+    const payload = visible.map((n) =>
+      n.options.length > 0
+        ? {
+            notification_id: n.id,
+            user_id: auth.user.user_id,
+            action: n.options[n.options.length - 1].value,
+            source_type: n.source_type,
+            type: "action", // ← added
+          }
+        : {
+            notification_id: n.id,
+            user_id: auth.user.user_id,
+            source_type: n.source_type,
+            type: "mark_seen", // ← added
+          },
+    );
+
+    try {
+      await apiClient("/notifications/action", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.error("Dismiss all failed", err);
+    }
   };
 
   // ── source_type: usms → send to chat API ─────────────────────────────────
@@ -257,9 +330,11 @@ export function NotificationBell() {
       {/* Dropdown */}
       {open && (
         <div
-          className="absolute right-0 mt-2 w-96 rounded-2xl z-50 overflow-hidden
-               border border-white/10 shadow-chat animate-fade-in
-              bg-gradient-to-b from-[hsl(220_40%_4%)] to-[hsl(220_45%_3%)]"
+          className="fixed left-3 right-3 top-[70px] z-[100]
+           sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96
+           rounded-2xl overflow-hidden
+           border border-white/10 shadow-chat animate-fade-in
+           bg-gradient-to-b from-[hsl(220_40%_4%)] to-[hsl(220_45%_3%)]"
         >
           {/* Header */}
           <div
@@ -310,21 +385,19 @@ export function NotificationBell() {
 
           {/* Footer */}
           {/* Commented Temporarily */}
-          {/* {visible.length > 0 && (
+          {visible.length > 0 && (
             <div
               className="px-4 py-2.5 border-t border-white/10 flex justify-between
                          items-center bg-[hsl(220_40%_3%)]"
             >
               <button
-                onClick={() =>
-                  setDismissed(new Set(notifications.map((n) => n.id)))
-                }
+                onClick={handleDismissAll}
                 className="text-xs text-muted-foreground hover:text-foreground transition"
               >
                 Dismiss all
               </button>
             </div>
-          )} */}
+          )}
         </div>
       )}
     </div>

@@ -1,11 +1,14 @@
 // components/dashboard/AIAssistantCard.tsx
 import { useState, useRef, useEffect } from "react";
-import { Sparkles, ArrowRight, User } from "lucide-react";
+import { Sparkles, ArrowRight, User, Paperclip } from "lucide-react";
 import { fetchChatResponse } from "@/services/chatService";
 import { mapApiToChatResponse } from "@/mappers/chatMapper";
 import type { WidgetData } from "@/types/chat";
 import WidgetCard from "@/components/common/widgets/WidgetCard";
 import { useChat } from "@/context/ChatContext";
+import { FileUploadPanel } from "@/components/common/FileUploadPanel";
+import WhStarIcon from "@/assets/wh_star_icon.svg";
+import GenerateIcon from "@/assets/generate_icon.svg";
 
 interface Message {
   id: string;
@@ -45,21 +48,31 @@ const AIAssistantCard = () => {
     setIsExpanded,
     sendMessage,
     setMessages,
+    sendFileData,
     setLoading,
+    uploadExpect,
   } = useChat();
 
   const [query, setQuery] = useState("");
+  const [showUpload, setShowUpload] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-scroll to bottom on new messages
+  // ── Auto-scroll to bottom on new messages ────────────────────────────────
   useEffect(() => {
     const el = chatContainerRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, [messages, loading]);
 
-  // ── Send message ─────────────────────────────────────────────────────────
+  // ── Hide upload panel when uploadExpect resets ────────────────────────────
+  useEffect(() => {
+    if (!uploadExpect || !["cv", "jd"].includes(uploadExpect)) {
+      setShowUpload(false);
+    }
+  }, [uploadExpect]);
+
+  // ── Send message ──────────────────────────────────────────────────────────
   const handleGenerate = async (overrideQuery?: string) => {
     const text = (overrideQuery ?? query).trim();
     if (!text || loading) return;
@@ -68,7 +81,7 @@ const AIAssistantCard = () => {
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     if (!isExpanded) setIsExpanded(true);
 
-    await sendMessage(text); // ← delegates everything to ChatContext
+    await sendMessage(text);
   };
 
   // ── Widget option selected ────────────────────────────────────────────────
@@ -76,12 +89,12 @@ const AIAssistantCard = () => {
     const userMsg: Message = {
       id: Date.now().toString(),
       role: "user",
-      text: label, // show label in chat
+      text: label,
     };
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
 
-    fetchChatResponse(value) // send value to API
+    fetchChatResponse(value)
       .then((apiRes) => {
         const formatted = mapApiToChatResponse(apiRes);
         setMessages((prev) => [
@@ -109,6 +122,7 @@ const AIAssistantCard = () => {
   };
 
   const showChips = messages.length === 0 && !isExpanded;
+  const showPaperclip = !!uploadExpect && ["cv", "jd"].includes(uploadExpect);
 
   return (
     <div className="relative rounded-2xl border border-white/10 bg-gradient-to-b from-[hsl(220_40%_4%)] to-[hsl(220_30%_6%)] shadow-[0_10px_30px_rgba(0,0,0,0.4)]">
@@ -134,7 +148,7 @@ const AIAssistantCard = () => {
                     isFirstInGroup ? "mt-5 first:mt-0" : "mt-1.5"
                   }`}
                 >
-                  {/* Avatar — only on first bubble of a group */}
+                  {/* Avatar */}
                   <div className="w-7 shrink-0">
                     {isFirstInGroup ? (
                       <div
@@ -147,9 +161,10 @@ const AIAssistantCard = () => {
                         {isUser ? (
                           <User size={13} className="text-white/50" />
                         ) : (
-                          <Sparkles
-                            size={12}
-                            className="text-primary-foreground"
+                          <img
+                            src={WhStarIcon}
+                            alt="AI"
+                            className="w-4 h-4 object-contain"
                           />
                         )}
                       </div>
@@ -232,7 +247,11 @@ const AIAssistantCard = () => {
             {loading && (
               <div className="flex gap-3 mt-5">
                 <div className="w-7 h-7 rounded-full bg-primary shadow-[0_0_18px_hsl(160_62%_48%/0.55)] border border-primary/50 flex items-center justify-center shrink-0">
-                  <Sparkles size={12} className="text-primary-foreground" />
+                  <img
+                    src={WhStarIcon}
+                    alt="AI"
+                    className="w-4 h-4 object-contain"
+                  />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[10px] font-semibold tracking-[0.12em] uppercase text-white/25 px-0.5">
@@ -261,10 +280,28 @@ const AIAssistantCard = () => {
 
       {/* ── Input row ── */}
       <div className="relative flex flex-col sm:flex-row gap-4 items-start sm:items-center p-4 md:p-5">
+        {/* File upload panel — only when showPaperclip is true */}
+        {showUpload && showPaperclip && (
+          <FileUploadPanel
+            uploadExpect={uploadExpect!}
+            onClose={() => setShowUpload(false)}
+            onExtracted={(data, fileName) => {
+              //sendMessage(JSON.stringify(data)); // ← silently forward to chat
+              sendFileData(fileName, uploadExpect!, data);
+              setShowUpload(false);
+            }}
+          />
+        )}
+
+        {/* Textarea area */}
         <div className="flex items-start gap-3 flex-1 w-full">
           {!isExpanded && (
             <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shadow-[0_0_20px_hsl(160_62%_48%/0.4)] shrink-0">
-              <Sparkles size={20} className="text-primary-foreground" />
+              <img
+                src={WhStarIcon}
+                alt="AI Assistant"
+                className="w-6 h-6 object-contain"
+              />
             </div>
           )}
 
@@ -315,16 +352,40 @@ const AIAssistantCard = () => {
           </div>
         </div>
 
-        <button
-          onClick={() => handleGenerate()}
-          disabled={!query.trim() || loading}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold text-sm rounded-xl transition-all
-          hover:scale-[1.02] hover:shadow-[0_0_20px_hsl(160_62%_48%/0.5)]
-          disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-        >
-          {loading ? "Generating..." : isExpanded ? "Send" : "Generate"}
-          <ArrowRight size={16} />
-        </button>
+        {/* Right side — Attach + Send buttons */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Paperclip — only when upload_expect is cv or jd */}
+          {showPaperclip && (
+            <button
+              onClick={() => setShowUpload((prev) => !prev)}
+              className={`p-3 rounded-xl border transition-all
+                ${
+                  showUpload
+                    ? "bg-primary/20 border-primary/40 text-primary"
+                    : "bg-white/5 border-white/10 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                }`}
+            >
+              <Paperclip size={16} />
+            </button>
+          )}
+
+          {/* Send / Generate button */}
+          <button
+            onClick={() => handleGenerate()}
+            disabled={!query.trim() || loading}
+            className="flex items-center gap-2 px-6 py-3 bg-primary text-white    {/* ← text-white */}
+             font-semibold text-sm rounded-xl transition-all
+             hover:scale-[1.02] hover:shadow-[0_0_20px_hsl(160_62%_48%/0.5)]
+             disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? "Generating..." : isExpanded ? "Send" : "Generate"}
+            <img
+              src={GenerateIcon}
+              alt="generate"
+              className="w-4 h-4 object-contain"
+            />
+          </button>
+        </div>
       </div>
     </div>
   );

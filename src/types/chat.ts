@@ -1,3 +1,4 @@
+//types/chat.ts
 import type {
   PayslipData,
   CRMCustomer,
@@ -78,4 +79,5 @@ export type WidgetData =
 export interface ChatResponse {
   message: string;
   widgets: WidgetData[];
+  uploadExpect?: string | null;
 }

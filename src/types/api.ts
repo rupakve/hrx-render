@@ -5,6 +5,7 @@ export type ApiResponse<T = unknown> = {
   module?: string;
   reply?: string;
   module_response?: T;
+  upload_expect?: string | null;
   // old fields (keep temporarily until all responses migrated)
   type?: string;
   message?: string;
